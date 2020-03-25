@@ -1,0 +1,15 @@
+{
+  "name": "nodejs_article_manager",
+  "version": "1.0.0",
+  "description": "Simple Knowledgebase app",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app"
+  },
+  "author": "Alberto Ceballos",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "pug": "^2.0.4"
+  }
+}
