@@ -1,15 +1,55 @@
 const express = require ('express');
 const path = require ('path');
+const mysql = require('mysql');
+const bodyParser = require ('body-parser');
 
 // init app
 const app = express();
+
+// Connect to database
+// create connection to database
+// the mysql.createConnection function takes in a configuration object which contains host, user, password and the database name.
+const db = mysql.createConnection ({
+    host: 'localhost',
+    user: 'local_user',
+    password: 'local_password',
+    database: 'articles'
+});
+
+var selectArticlesQuery = "SELECT * FROM articles";
+
+// connect to database
+db.connect((err) => {
+    if (err) {
+        throw err;
+    }
+    console.log('Connected to database');
+});
+global.db = db;
 
 // Load View Engine
 app.set('views', path.join(__dirname, 'views'));
 app.set ('view engine', 'pug');
 
+// Body parser Middleware
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+// parse application/json
+app.use(bodyParser.json())
+
+function getArticles(callback) {    
+    db.query(selectArticlesQuery,
+        function (err, result) {
+            //here we return the results of the query
+            callback(err, JSON.parse(JSON.stringify(result)));
+        }
+    );    
+}
+
 // Home Route
 app.get('/', function (req, res) {
+
+/*
     let articles = [
         {
             id: 1,
@@ -30,10 +70,12 @@ app.get('/', function (req, res) {
             body: 'This is Article Three'
         }
     ]
-    res.render('index', {
-        title: 'Hello KnowledgeBase',
-        articles: articles
-    });
+*/
+
+    getArticles(function (err, articleResult){ 
+        if (err) throw err;
+        res.render('index', {title: 'Hello KnowledgeBase', articles: articleResult});
+     })
 })
 
 // Add Article Route
@@ -41,6 +83,21 @@ app.get('/articles/add', function (req, res) {
     res.render('add_article', {
         title: 'Add Article'
     });
+})
+
+// Add Submit POST Route
+app.post('/articles/add', function(req,res) {
+  
+ /*   
+    let article = new Article();
+    article.setId(99);
+    article.setTitle(req.body.title);
+    article.setAuthor(req.body.author);
+    article.setBody(req.body.body);
+*/
+    // Save the new article to database
+
+    res.redirect('/');
 })
 
 // Start server
