@@ -17,6 +17,7 @@ const db = mysql.createConnection ({
 });
 
 var selectArticlesQuery = "SELECT * FROM articles";
+var insertArticleQuery  = "INSERT INTO articles (title, author, body) VALUES (?,?,?)";
 
 // connect to database
 db.connect((err) => {
@@ -45,6 +46,21 @@ function getArticles(callback) {
         }
     );    
 }
+
+function insertArticle(article) {
+    
+    db.query(insertArticleQuery, [article.title, article.author, article.body], (err, results, fields) => {
+        if (err) {
+          return console.error(err.message);
+        }
+        
+        // log insert result
+        console.log('Rows inserted [' + results.affectedRows + ']');
+        article.id = results.insertId;
+        console.log('Article saved to database with id ',article.id);
+      });
+}
+
 
 // Home Route
 app.get('/', function (req, res) {
@@ -90,11 +106,10 @@ app.post('/articles/add', function(req,res) {
   
     let Article = require ('./models/article');
     
-    var article = new Article(99,req.body.title,req.body.author,req.body.body);
-    console.log(article);
-    
+    var article = new Article(req.body.title,req.body.author,req.body.body);
+ 
     // Save the new article to database
-
+    insertArticle (article);
     res.redirect('/');
 })
 
