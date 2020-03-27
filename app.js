@@ -88,13 +88,11 @@ app.get('/articles/add', function (req, res) {
 // Add Submit POST Route
 app.post('/articles/add', function(req,res) {
   
- /*   
-    let article = new Article();
-    article.setId(99);
-    article.setTitle(req.body.title);
-    article.setAuthor(req.body.author);
-    article.setBody(req.body.body);
-*/
+    let Article = require ('./models/article');
+    
+    var article = new Article(99,req.body.title,req.body.author,req.body.body);
+    console.log(article);
+    
     // Save the new article to database
 
     res.redirect('/');
