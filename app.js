@@ -17,6 +17,7 @@ const db = mysql.createConnection ({
 });
 
 var selectArticlesQuery = "SELECT * FROM articles";
+var selectSingleArticleQuery = "SELECT * FROM articles WHERE id=?";
 var insertArticleQuery  = "INSERT INTO articles (title, author, body) VALUES (?,?,?)";
 
 // connect to database
@@ -34,14 +35,24 @@ app.set ('view engine', 'pug');
 
 // Body parser Middleware
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.urlencoded({ extended: false }));
 // parse application/json
-app.use(bodyParser.json())
+app.use(bodyParser.json());
+
+// Set public folder
+app.use (express.static(path.join(__dirname, 'public')));
 
 function getArticles(callback) {    
     db.query(selectArticlesQuery,
         function (err, result) {
-            //here we return the results of the query
+           callback(err, JSON.parse(JSON.stringify(result)));
+        }
+    );    
+}
+
+function getSingleArticle(callback) {    
+    db.query(selectSingleArticleQuery,
+        function (err, result) {
             callback(err, JSON.parse(JSON.stringify(result)));
         }
     );    
@@ -61,38 +72,19 @@ function insertArticle(article) {
       });
 }
 
-
 // Home Route
 app.get('/', function (req, res) {
-
-/*
-    let articles = [
-        {
-            id: 1,
-            title: 'Article One',
-            author: 'Alberto Ceballos',
-            body: 'This is Article One'
-        },
-        {
-            id: 2,
-            title: 'Article Two',
-            author: 'David Ceballos',
-            body: 'This is Article Two'
-        },
-        {
-            id: 3,
-            title: 'Article Three',
-            author: 'Mikel Ceballos',
-            body: 'This is Article Three'
-        }
-    ]
-*/
-
     getArticles(function (err, articleResult){ 
         if (err) throw err;
         res.render('index', {title: 'Hello KnowledgeBase', articles: articleResult});
      })
 })
+
+// Get Single Article
+app.get('/article/:id', function(req, res) {
+    console.log ('Get details for ' + req.params.id);
+    getSingleArticle(req.params.id);
+});
 
 // Add Article Route
 app.get('/articles/add', function (req, res) {
@@ -104,8 +96,7 @@ app.get('/articles/add', function (req, res) {
 // Add Submit POST Route
 app.post('/articles/add', function(req,res) {
   
-    let Article = require ('./models/article');
-    
+    let Article = require ('./models/article');   
     var article = new Article(req.body.title,req.body.author,req.body.body);
  
     // Save the new article to database
