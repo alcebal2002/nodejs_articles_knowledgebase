@@ -50,8 +50,8 @@ function getArticles(callback) {
     );    
 }
 
-function getSingleArticle(callback) {    
-    db.query(selectSingleArticleQuery,
+function getSingleArticle(articleId, callback) {    
+    db.query(selectSingleArticleQuery, [articleId], 
         function (err, result) {
             callback(err, JSON.parse(JSON.stringify(result)));
         }
@@ -76,14 +76,23 @@ function insertArticle(article) {
 app.get('/', function (req, res) {
     getArticles(function (err, articleResult){ 
         if (err) throw err;
-        res.render('index', {title: 'Hello KnowledgeBase', articles: articleResult});
+        res.render('index', {
+            title: 'Hello KnowledgeBase', articles: articleResult
+        });
      })
 })
 
 // Get Single Article
 app.get('/article/:id', function(req, res) {
-    console.log ('Get details for ' + req.params.id);
-    getSingleArticle(req.params.id);
+    
+    console.log ('Get details for article ' + req.params.id);
+    getSingleArticle(req.params.id, function (err, articleResult){
+        if (err) throw err;
+        console.log (articleResult);
+        res.render('single_article', {
+            title: 'Hello KnowledgeBase', article: articleResult[0]
+        });
+     })
 });
 
 // Add Article Route
