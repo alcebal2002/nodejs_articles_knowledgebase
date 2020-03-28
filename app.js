@@ -16,9 +16,10 @@ const db = mysql.createConnection ({
     database: 'articles'
 });
 
-var selectArticlesQuery = "SELECT * FROM articles";
+var selectArticlesQuery      = "SELECT * FROM articles";
 var selectSingleArticleQuery = "SELECT * FROM articles WHERE id=?";
-var insertArticleQuery  = "INSERT INTO articles (title, author, body) VALUES (?,?,?)";
+var insertArticleQuery       = "INSERT INTO articles (title, author, body) VALUES (?,?,?)";
+var updateArticleQuery       = "UPDATE articles SET title=?, author=?, body=? WHERE id=?";
 
 // connect to database
 db.connect((err) => {
@@ -42,6 +43,7 @@ app.use(bodyParser.json());
 // Set public folder
 app.use (express.static(path.join(__dirname, 'public')));
 
+// Get all the Articles from database
 function getArticles(callback) {    
     db.query(selectArticlesQuery,
         function (err, result) {
@@ -50,6 +52,7 @@ function getArticles(callback) {
     );    
 }
 
+// Get a single Article (by Id) from database
 function getSingleArticle(articleId, callback) {    
     db.query(selectSingleArticleQuery, [articleId], 
         function (err, result) {
@@ -58,13 +61,13 @@ function getSingleArticle(articleId, callback) {
     );    
 }
 
+// Insert new Article into database
 function insertArticle(article) {
     
     db.query(insertArticleQuery, [article.title, article.author, article.body], (err, results, fields) => {
         if (err) {
           return console.error(err.message);
         }
-        
         // log insert result
         console.log('Rows inserted [' + results.affectedRows + ']');
         article.id = results.insertId;
@@ -72,12 +75,33 @@ function insertArticle(article) {
       });
 }
 
+// Update the Article (by Id) in the database
+function updateArticle(article) {
+    
+    //console.log("Article to be updated");
+    //console.log(article);
+    db.query(updateArticleQuery, [article.title, article.author, article.body, article.id], (err, results, fields) => {
+        if (err) {
+          return console.error(err.message);
+        }
+        // log update result
+        //console.log('Rows updated [' + results.affectedRows + ']');
+        if (results.affectedRows==1) {
+            console.log('Updated Article ' + article.id);
+        } else {
+            console.log('Unable to update Article ' + article.id);
+        }
+      });
+}
+
+
 // Home Route
 app.get('/', function (req, res) {
     getArticles(function (err, articleResult){ 
         if (err) throw err;
         res.render('index', {
-            title: 'Hello KnowledgeBase', articles: articleResult
+            title: 'Hello KnowledgeBase', 
+            articles: articleResult
         });
      })
 })
@@ -89,8 +113,9 @@ app.get('/article/:id', function(req, res) {
     getSingleArticle(req.params.id, function (err, articleResult){
         if (err) throw err;
         console.log (articleResult);
-        res.render('single_article', {
-            title: 'Hello KnowledgeBase', article: articleResult[0]
+        res.render('show_article', {
+            title: 'Hello KnowledgeBase', 
+            article: articleResult[0]
         });
      })
 });
@@ -102,14 +127,40 @@ app.get('/articles/add', function (req, res) {
     });
 })
 
+// Load Edit Article form
+app.get('/articles/edit/:id', function(req, res) {
+    
+    console.log ('Get details for article ' + req.params.id);
+    getSingleArticle(req.params.id, function (err, articleResult){
+        if (err) throw err;
+        console.log (articleResult);
+        res.render('edit_article', {
+            title: 'Edit Article', 
+            article: articleResult[0]
+        });
+     })
+});
+
 // Add Submit POST Route
 app.post('/articles/add', function(req,res) {
   
-    let Article = require ('./models/article');   
-    var article = new Article(req.body.title,req.body.author,req.body.body);
+    let Article = require ('./models/article');
+    var article = new Article(null,req.body.title, req.body.author, req.body.body);
  
     // Save the new article to database
     insertArticle (article);
+    res.redirect('/');
+})
+
+// Update Submit POST Route
+app.post('/articles/edit/:id', function(req,res) {
+  
+    let Article = require ('./models/article');
+    var article = new Article(req.params.id, req.body.title, req.body.author, req.body.body);
+    //console.log (article);
+ 
+    // Update the article in the database
+    updateArticle (article);
     res.redirect('/');
 })
 
