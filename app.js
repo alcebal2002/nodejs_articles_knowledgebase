@@ -20,6 +20,7 @@ var selectArticlesQuery      = "SELECT * FROM articles";
 var selectSingleArticleQuery = "SELECT * FROM articles WHERE id=?";
 var insertArticleQuery       = "INSERT INTO articles (title, author, body) VALUES (?,?,?)";
 var updateArticleQuery       = "UPDATE articles SET title=?, author=?, body=? WHERE id=?";
+var deleteArticleQuery       = "DELETE FROM articles WHERE id=?";
 
 // connect to database
 db.connect((err) => {
@@ -44,7 +45,10 @@ app.use(bodyParser.json());
 app.use (express.static(path.join(__dirname, 'public')));
 
 // Get all the Articles from database
-function getArticles(callback) {    
+function getArticles(callback) {
+
+    console.log('Listing All Articles');
+
     db.query(selectArticlesQuery,
         function (err, result) {
            callback(err, JSON.parse(JSON.stringify(result)));
@@ -53,8 +57,11 @@ function getArticles(callback) {
 }
 
 // Get a single Article (by Id) from database
-function getSingleArticle(articleId, callback) {    
-    db.query(selectSingleArticleQuery, [articleId], 
+function getSingleArticle(id, callback) {
+    
+    console.log('Showing details for Article ' + id);
+    
+    db.query(selectSingleArticleQuery, [id], 
         function (err, result) {
             callback(err, JSON.parse(JSON.stringify(result)));
         }
@@ -63,37 +70,61 @@ function getSingleArticle(articleId, callback) {
 
 // Insert new Article into database
 function insertArticle(article) {
+
+    console.log('Inserting new Article');
     
     db.query(insertArticleQuery, [article.title, article.author, article.body], (err, results, fields) => {
         if (err) {
           return console.error(err.message);
         }
-        // log insert result
-        console.log('Rows inserted [' + results.affectedRows + ']');
-        article.id = results.insertId;
-        console.log('Article saved to database with id ',article.id);
-      });
+        // log result
+        //console.log('Rows inserted [' + results.affectedRows + ']');
+        if (results.affectedRows==1) {
+            article.id = results.insertId;
+            console.log('Article inserted with id: ' + article.id);
+        } else {
+            console.log('Unable to insert Article');
+        }
+    });
 }
 
 // Update the Article (by Id) in the database
 function updateArticle(article) {
     
-    //console.log("Article to be updated");
-    //console.log(article);
+    console.log('Updating article ' + article.id + "...");
+
     db.query(updateArticleQuery, [article.title, article.author, article.body, article.id], (err, results, fields) => {
         if (err) {
           return console.error(err.message);
         }
-        // log update result
+        // log result
         //console.log('Rows updated [' + results.affectedRows + ']');
         if (results.affectedRows==1) {
-            console.log('Updated Article ' + article.id);
+            console.log('Article ' + article.id + " updated");
         } else {
             console.log('Unable to update Article ' + article.id);
         }
       });
 }
 
+// Delete the Article (by Id)
+function deleteArticle(id) {
+
+    console.log('Deleting Article ' + id + "...");
+       
+    db.query(deleteArticleQuery, [id], (err, results, fields) => {
+        if (err) {
+          return console.error(err.message);
+        }
+        // log result
+        console.log('Rows updated [' + results.affectedRows + ']');
+        if (results.affectedRows==1) {
+            console.log('Article ' + id + " deleted");
+        } else {
+            console.log('Unable to delete Article ' + id);
+        }
+      });
+}
 
 // Home Route
 app.get('/', function (req, res) {
@@ -109,10 +140,10 @@ app.get('/', function (req, res) {
 // Get Single Article
 app.get('/article/:id', function(req, res) {
     
-    console.log ('Get details for article ' + req.params.id);
+    //console.log ('Get details for article ' + req.params.id);
     getSingleArticle(req.params.id, function (err, articleResult){
         if (err) throw err;
-        console.log (articleResult);
+        //console.log (articleResult);
         res.render('show_article', {
             title: 'Hello KnowledgeBase', 
             article: articleResult[0]
@@ -130,7 +161,7 @@ app.get('/articles/add', function (req, res) {
 // Load Edit Article form
 app.get('/articles/edit/:id', function(req, res) {
     
-    console.log ('Get details for article ' + req.params.id);
+    //console.log ('Get details for article ' + req.params.id);
     getSingleArticle(req.params.id, function (err, articleResult){
         if (err) throw err;
         console.log (articleResult);
@@ -163,6 +194,13 @@ app.post('/articles/edit/:id', function(req,res) {
     updateArticle (article);
     res.redirect('/');
 })
+
+// Delete Article
+app.delete('/article/:id', function(req,res){
+    
+    deleteArticle(req.params.id);
+    res.send('Success');
+});
 
 // Start server
 app.listen(3000, function() {

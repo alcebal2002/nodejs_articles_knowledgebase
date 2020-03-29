@@ -6,3 +6,4 @@ block content
     p= article.body
     hr
     a.btn.btn-primary(href='/articles/edit/'+article.id) Edit
+    a.btn.btn-danger.delete-article(href='#', data-id=article.id) Delete
