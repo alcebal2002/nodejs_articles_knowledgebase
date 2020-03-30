@@ -103,7 +103,9 @@ app.get('/', function (req, res) {
 
 // Route Files
 let articles_routes = require('./routes/articles_routes');
+let users_routes = require('./routes/users_routes');
 app.use('/articles', articles_routes);
+app.use('/users', users_routes);
 
 // Start server
 app.listen(3000, function() {

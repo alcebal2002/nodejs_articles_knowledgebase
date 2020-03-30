@@ -1,0 +1,16 @@
+extends layout
+
+block content
+    h1 #{title}
+    form(method='POST', action='/users/register')
+        #form-transition-group
+            label Email:
+            input.form-control(name='email', type='text')
+        #form-transition-group
+            label Username:
+            input.form-control(name='username', type='text')
+        #form-transition-group
+            label Password:
+            input.form-control(name='password', type='password')
+        br
+        input.btn.btn-primary(type='submit', value='Submit')
