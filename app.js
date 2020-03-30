@@ -212,14 +212,28 @@ app.get('/articles/edit/:id', function(req, res) {
 
 // Add Submit POST Route
 app.post('/articles/add', function(req,res) {
-  
-    let Article = require ('./models/article');
-    var article = new Article(null,req.body.title, req.body.author, req.body.body);
- 
-    // Save the new article to database
-    insertArticle (article);
-    req.flash('success', 'Article added');
-    res.redirect('/');
+
+    req.checkBody('title', 'Title is required').notEmpty();
+    req.checkBody('author', 'Author is required').notEmpty();
+    req.checkBody('body', 'Body is required').notEmpty();
+
+    // Get Errors
+    let errors = req.validationErrors();
+
+    if (errors) {
+        res.render('add_article', {
+            title: 'Add Article',
+            errors: errors
+        });
+    } else {
+        let Article = require ('./models/article');
+        var article = new Article(null,req.body.title, req.body.author, req.body.body);
+     
+        // Save the new article to database
+        insertArticle (article);
+        req.flash('success', 'Article added');
+        res.redirect('/');
+    }    
 })
 
 // Update Submit POST Route
