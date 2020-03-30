@@ -2,6 +2,9 @@ const express = require ('express');
 const path = require ('path');
 const mysql = require('mysql');
 const bodyParser = require ('body-parser');
+const expressValidator = require ('express-validator');
+const flash = require ('connect-flash');
+const session = require ('express-session');
 
 // init app
 const app = express();
@@ -24,7 +27,9 @@ var deleteArticleQuery       = "DELETE FROM articles WHERE id=?";
 
 // connect to database
 db.connect((err) => {
+    console.log('Connecting to database...');
     if (err) {
+        console.log('Error connecting to database');
         throw err;
     }
     console.log('Connected to database');
@@ -43,6 +48,39 @@ app.use(bodyParser.json());
 
 // Set public folder
 app.use (express.static(path.join(__dirname, 'public')));
+
+// Express-Session middleware
+app.use(session({
+    secret: 'keyboard cat',
+    resave: true,
+    saveUninitialized: true
+    //cookie: { secure: true }
+}));
+
+// Express-Messages middleware
+app.use(require('connect-flash')());
+app.use(function(req,res,next){
+    res.locals.messages = require ('express-messages')(req,res);
+    next();
+});
+
+// Express-Validator middleware
+app.use(expressValidator({
+    errorFormatter: function (param, msg, value) {
+        var namespace = param.split ('.'),
+        root = namespace.shift(),
+        formParam = root;
+        
+        while (namespace.length) {
+            formParam += '[' + namespace.shift() + ']';
+        }
+        return {
+            param: formParam,
+            msg: msg,
+            value: value
+        };
+    }
+}));
 
 // Get all the Articles from database
 function getArticles(callback) {
@@ -91,7 +129,7 @@ function insertArticle(article) {
 // Update the Article (by Id) in the database
 function updateArticle(article) {
     
-    console.log('Updating article ' + article.id + "...");
+    console.log('Updating Article ' + article.id + "...");
 
     db.query(updateArticleQuery, [article.title, article.author, article.body, article.id], (err, results, fields) => {
         if (err) {
@@ -164,7 +202,7 @@ app.get('/articles/edit/:id', function(req, res) {
     //console.log ('Get details for article ' + req.params.id);
     getSingleArticle(req.params.id, function (err, articleResult){
         if (err) throw err;
-        console.log (articleResult);
+        //console.log (articleResult);
         res.render('edit_article', {
             title: 'Edit Article', 
             article: articleResult[0]
@@ -180,6 +218,7 @@ app.post('/articles/add', function(req,res) {
  
     // Save the new article to database
     insertArticle (article);
+    req.flash('success', 'Article added');
     res.redirect('/');
 })
 
@@ -192,6 +231,7 @@ app.post('/articles/edit/:id', function(req,res) {
  
     // Update the article in the database
     updateArticle (article);
+    req.flash('success', 'Article Updated');
     res.redirect('/');
 })
 
