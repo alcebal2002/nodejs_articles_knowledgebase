@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 var selectSingleUserQuery = "SELECT * FROM users WHERE id=?";
-var insertUserQuery       = "INSERT INTO users (email, username, password) VALUES (?,?,?)";
-var updateUserQuery       = "UPDATE users SET email=?, username=?, password=? WHERE id=?";
+var insertUserQuery       = "INSERT INTO users (email, user_name, user_password) VALUES (?,?,?)";
+var updateUserQuery       = "UPDATE users SET email=?, user_name=?, user_password=? WHERE id=?";
 var deleteUserQuery       = "DELETE FROM users WHERE id=?";
 
 // Get a single User (by Id) from database
@@ -19,9 +19,9 @@ function getSingleUSer(id, callback) {
 }
 
 // Insert new User into database
-function insertUSer(user) {
+function insertUser(user) {
 
-    console.log('Inserting new User');
+    console.log('Inserting new User...');
     
     db.query(insertUserQuery, [user.email, user.username, user.password], (err, results, fields) => {
         if (err) {
@@ -114,7 +114,7 @@ router.post('/register', function(req,res) {
         });
     } else {
         let User = require ('../models/user');
-        var user = new User(null,req.body.username, req.body.email, req.body.password);
+        var user = new User(null, req.body.email, req.body.username, req.body.password);
      
         // Save the new user to database
         insertUser (user);

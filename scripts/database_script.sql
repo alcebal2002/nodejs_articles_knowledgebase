@@ -14,3 +14,11 @@ INSERT INTO articles VALUES ('Title 4', 'Author 4', 'Body 4');
 INSERT INTO articles VALUES ('Title 5', 'Author 5', 'Body 5');
 COMMIT;
 */
+
+CREATE TABLE users (
+    id INT, 
+    email VARCHAR(100),
+    user_name VARCHAR(100), 
+    user_password VARCHAR(100)
+);
+ALTER TABLE users CHANGE id id INT AUTO_INCREMENT PRIMARY KEY;

@@ -21,7 +21,7 @@ function getSingleArticle(id, callback) {
 // Insert new Article into database
 function insertArticle(article) {
 
-    console.log('Inserting new Article');
+    console.log('Inserting new Article...');
     
     db.query(insertArticleQuery, [article.title, article.author, article.body], (err, results, fields) => {
         if (err) {
