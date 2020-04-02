@@ -8,7 +8,7 @@ const session = require ('express-session');
 
 // Load environment specific properties based on [env] startup parameter
 // eg. npm start env=development or nodemon app.js env=development
-const environment = require ('./environments');
+const environment = require ('./config/environments');
 const PropertiesReader = require('properties-reader');
 const properties = PropertiesReader(environment);
 
@@ -18,14 +18,7 @@ const app = express();
 // Connect to database
 // create connection to database
 // the mysql.createConnection function takes in a configuration object which contains host, user, password and the database name.
-const db = mysql.createConnection ({
-    host: 'localhost',
-    user: 'local_user',
-    password: 'local_password',
-    database: 'articles'
-});
-
-var selectArticlesQuery = "SELECT * FROM articles";
+const db = mysql.createConnection (properties.get('database.mysql.connectionString'));
 
 // connect to database
 db.connect((err) => {
@@ -53,9 +46,9 @@ app.use (express.static(path.join(__dirname, 'public')));
 
 // Express-Session middleware
 app.use(session({
-    secret: 'keyboard cat',
-    resave: true,
-    saveUninitialized: true
+    secret: properties.get('express.secret'),
+    resave: properties.get('express.resave'),
+    saveUninitialized: properties.get('express.saveUninitialized')
     //cookie: { secure: true }
 }));
 
@@ -85,11 +78,11 @@ app.use(expressValidator({
 }));
 
 // Get all the Articles from database
-function getArticles(callback) {
+function getArticles(callback) { 
 
     console.log('Listing All Articles');
 
-    db.query(selectArticlesQuery,
+    db.query(properties.get('queries.selectAllArticles'),
         function (err, result) {
            callback(err, JSON.parse(JSON.stringify(result)));
         }
@@ -101,7 +94,7 @@ app.get('/', function (req, res) {
     getArticles(function (err, articleResult){ 
         if (err) throw err;
         res.render('index', {
-            title: 'Hello KnowledgeBase', 
+            title: properties.get('main.app.title'), 
             articles: articleResult
         });
      })
@@ -114,6 +107,6 @@ app.use('/articles', articles_routes);
 app.use('/users', users_routes);
 
 // Start server
-app.listen(3000, function() {
-    console.log('Server started on port 3000...')
+app.listen(properties.get('main.app.port'), function() {
+    console.log('Server started on port ' + properties.get('main.app.port') + '...')
 })

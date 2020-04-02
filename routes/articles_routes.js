@@ -1,17 +1,18 @@
 const express = require('express');
 const router = express.Router();
 
-var selectSingleArticleQuery = "SELECT * FROM articles WHERE id=?";
-var insertArticleQuery       = "INSERT INTO articles (title, author, body) VALUES (?,?,?)";
-var updateArticleQuery       = "UPDATE articles SET title=?, author=?, body=? WHERE id=?";
-var deleteArticleQuery       = "DELETE FROM articles WHERE id=?";
+// Load environment specific properties based on [env] startup parameter
+// eg. npm start env=development or nodemon app.js env=development
+const environment = require ('../config/environments');
+const PropertiesReader = require('properties-reader');
+const properties = PropertiesReader(environment);
 
 // Get a single Article (by Id) from database
 function getSingleArticle(id, callback) {
     
     console.log('Showing details for Article ' + id);
     
-    db.query(selectSingleArticleQuery, [id], 
+    db.query(properties.get('queries.selectSingleArticle'), [id], 
         function (err, result) {
             callback(err, JSON.parse(JSON.stringify(result)));
         }
@@ -23,7 +24,7 @@ function insertArticle(article) {
 
     console.log('Inserting new Article...');
     
-    db.query(insertArticleQuery, [article.title, article.author, article.body], (err, results, fields) => {
+    db.query(properties.get('queries.insertArticle'), [article.title, article.author, article.body], (err, results, fields) => {
         if (err) {
           return console.error(err.message);
         }
@@ -43,7 +44,7 @@ function updateArticle(article) {
     
     console.log('Updating Article ' + article.id + "...");
 
-    db.query(updateArticleQuery, [article.title, article.author, article.body, article.id], (err, results, fields) => {
+    db.query(properties.get('queries.updateArticle'), [article.title, article.author, article.body, article.id], (err, results, fields) => {
         if (err) {
           return console.error(err.message);
         }
@@ -62,7 +63,7 @@ function deleteArticle(id) {
 
     console.log('Deleting Article ' + id + "...");
        
-    db.query(deleteArticleQuery, [id], (err, results, fields) => {
+    db.query(properties.get('queries.deleteArticle'), [id], (err, results, fields) => {
         if (err) {
           return console.error(err.message);
         }
@@ -79,7 +80,7 @@ function deleteArticle(id) {
 // Add Article Route
 router.get('/add', function (req, res) {
     res.render('add_article', {
-        title: 'Add Article'
+        title: properties.get('titles.addArticle')
     });
 })
 
@@ -91,7 +92,7 @@ router.get('/edit/:id', function(req, res) {
         if (err) throw err;
         //console.log (articleResult);
         res.render('edit_article', {
-            title: 'Edit Article', 
+            title: properties.get('titles.editArticle'), 
             article: articleResult[0]
         });
      })
@@ -109,7 +110,7 @@ router.post('/add', function(req,res) {
 
     if (errors) {
         res.render('add_article', {
-            title: 'Add Article',
+            title: properties.get('titles.addArticle'),
             errors: errors
         });
     } else {
@@ -151,7 +152,7 @@ router.get('/:id', function(req, res) {
         if (err) throw err;
         //console.log (articleResult);
         res.render('show_article', {
-            title: 'Hello KnowledgeBase', 
+            title: properties.get('main.app.title'), 
             article: articleResult[0]
         });
      })
