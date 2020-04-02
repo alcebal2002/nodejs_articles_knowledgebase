@@ -82,7 +82,7 @@ function getArticles(callback) {
 
     console.log('Listing All Articles');
 
-    db.query(properties.get('queries.selectAllArticles'),
+    db.query(properties.get('queries.articles.selectAll'),
         function (err, result) {
            callback(err, JSON.parse(JSON.stringify(result)));
         }
