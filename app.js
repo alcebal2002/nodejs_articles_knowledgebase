@@ -6,6 +6,12 @@ const expressValidator = require ('express-validator');
 const flash = require ('connect-flash');
 const session = require ('express-session');
 
+// Load environment specific properties based on [env] startup parameter
+// eg. npm start env=development or nodemon app.js env=development
+const environment = require ('./environments');
+const PropertiesReader = require('properties-reader');
+const properties = PropertiesReader(environment);
+
 // init app
 const app = express();
 
