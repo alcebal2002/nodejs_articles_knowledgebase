@@ -1,17 +1,18 @@
 const express = require('express');
 const router = express.Router();
 
-var selectSingleUserQuery = "SELECT * FROM users WHERE id=?";
-var insertUserQuery       = "INSERT INTO users (email, user_name, user_password) VALUES (?,?,?)";
-var updateUserQuery       = "UPDATE users SET email=?, user_name=?, user_password=? WHERE id=?";
-var deleteUserQuery       = "DELETE FROM users WHERE id=?";
+// Load environment specific properties based on [env] startup parameter
+// eg. npm start env=development or nodemon app.js env=development
+const environment = require ('../config/environments');
+const PropertiesReader = require('properties-reader');
+const properties = PropertiesReader(environment);
 
 // Get a single User (by Id) from database
 function getSingleUSer(id, callback) {
     
     console.log('Showing details for User ' + id);
     
-    db.query(selectSingleUSerQuery, [id], 
+    db.query(properties.get('queries.users.selectSingle'), [id], 
         function (err, result) {
             callback(err, JSON.parse(JSON.stringify(result)));
         }
@@ -23,7 +24,7 @@ function insertUser(user) {
 
     console.log('Inserting new User...');
     
-    db.query(insertUserQuery, [user.email, user.username, user.password], (err, results, fields) => {
+    db.query(properties.get('queries.users.insert'), [user.email, user.username, user.password], (err, results, fields) => {
         if (err) {
           return console.error(err.message);
         }
@@ -43,7 +44,7 @@ function updateUser(user) {
     
     console.log('Updating User ' + user.id + "...");
 
-    db.query(updateUserQuery, [user.email, user.username, user.password, user.id], (err, results, fields) => {
+    db.query(properties.get('queries.users.update'), [user.email, user.username, user.password, user.id], (err, results, fields) => {
         if (err) {
           return console.error(err.message);
         }
@@ -62,7 +63,7 @@ function deleteUser(id) {
 
     console.log('Deleting User ' + id + "...");
        
-    db.query(deleteUserQuery, [id], (err, results, fields) => {
+    db.query(properties.get('queries.users.delete'), [id], (err, results, fields) => {
         if (err) {
           return console.error(err.message);
         }
@@ -79,7 +80,7 @@ function deleteUser(id) {
 // Add User Route
 router.get('/register', function (req, res) {
     res.render('register_user', {
-        title: 'Register User'
+        title: properties.get('titles.users.register')
     });
 })
 
@@ -91,7 +92,7 @@ router.get('/edit/:id', function(req, res) {
         if (err) throw err;
         //console.log (userResult);
         res.render('edit_user', {
-            title: 'Edit User', 
+            title: properties.get('titles.users.edit'), 
             user: userResult[0]
         });
      })
@@ -109,7 +110,7 @@ router.post('/register', function(req,res) {
 
     if (errors) {
         res.render('register_user', {
-            title: 'Register User',
+            title: properties.get('titles.users.register'),
             errors: errors
         });
     } else {
@@ -151,7 +152,7 @@ router.get('/:id', function(req, res) {
         if (err) throw err;
         //console.log (userResult);
         res.render('show_user', {
-            title: 'Hello KnowledgeBase', 
+            title: properties.get('main.app.title'), 
             article: userResult[0]
         });
      })

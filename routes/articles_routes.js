@@ -12,7 +12,7 @@ function getSingleArticle(id, callback) {
     
     console.log('Showing details for Article ' + id);
     
-    db.query(properties.get('queries.selectSingleArticle'), [id], 
+    db.query(properties.get('queries.articles.selectSingle'), [id], 
         function (err, result) {
             callback(err, JSON.parse(JSON.stringify(result)));
         }
@@ -24,7 +24,7 @@ function insertArticle(article) {
 
     console.log('Inserting new Article...');
     
-    db.query(properties.get('queries.insertArticle'), [article.title, article.author, article.body], (err, results, fields) => {
+    db.query(properties.get('queries.articles.insert'), [article.title, article.author, article.body], (err, results, fields) => {
         if (err) {
           return console.error(err.message);
         }
@@ -44,7 +44,7 @@ function updateArticle(article) {
     
     console.log('Updating Article ' + article.id + "...");
 
-    db.query(properties.get('queries.updateArticle'), [article.title, article.author, article.body, article.id], (err, results, fields) => {
+    db.query(properties.get('queries.articles.update'), [article.title, article.author, article.body, article.id], (err, results, fields) => {
         if (err) {
           return console.error(err.message);
         }
@@ -63,7 +63,7 @@ function deleteArticle(id) {
 
     console.log('Deleting Article ' + id + "...");
        
-    db.query(properties.get('queries.deleteArticle'), [id], (err, results, fields) => {
+    db.query(properties.get('queries.articles.delete'), [id], (err, results, fields) => {
         if (err) {
           return console.error(err.message);
         }
@@ -80,7 +80,7 @@ function deleteArticle(id) {
 // Add Article Route
 router.get('/add', function (req, res) {
     res.render('add_article', {
-        title: properties.get('titles.addArticle')
+        title: properties.get('titles.articles.add')
     });
 })
 
@@ -92,7 +92,7 @@ router.get('/edit/:id', function(req, res) {
         if (err) throw err;
         //console.log (articleResult);
         res.render('edit_article', {
-            title: properties.get('titles.editArticle'), 
+            title: properties.get('titles.articles.edit'), 
             article: articleResult[0]
         });
      })
@@ -110,7 +110,7 @@ router.post('/add', function(req,res) {
 
     if (errors) {
         res.render('add_article', {
-            title: properties.get('titles.addArticle'),
+            title: properties.get('titles.articles.add'),
             errors: errors
         });
     } else {
