@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const passport = require('passport');
 
 // Load environment specific properties based on [env] startup parameter
 // eg. npm start env=development or nodemon app.js env=development
@@ -142,6 +143,22 @@ router.delete('/:id', function(req,res){
     
     deleteUser(req.params.id);
     res.send('Success');
+});
+
+// Login Form
+router.get('/login', function(req, res){
+    res.render('login', {
+        title: properties.get('titles.users.login')
+    });
+});
+
+// Login Process
+router.post ('/login', function(req, res, next) {
+    passport.authenticate('local',{
+        successRedirect: '/',
+        failureRedirect: '/users/login',
+        failureFlash: true
+    })(req, res, next);
 });
 
 // Get Single User

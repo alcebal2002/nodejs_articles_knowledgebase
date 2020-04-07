@@ -5,6 +5,7 @@ const bodyParser = require ('body-parser');
 const expressValidator = require ('express-validator');
 const flash = require ('connect-flash');
 const session = require ('express-session');
+const passport = require('passport');
 
 // Load environment specific properties based on [env] startup parameter
 // eg. npm start env=development or nodemon app.js env=development
@@ -77,6 +78,12 @@ app.use(expressValidator({
     }
 }));
 
+// Passport Config
+require ('./passport_config/passport');
+// Passport Middleware
+app.use (passport.initialize());
+app.use (passport.session());
+
 // Get all the Articles from database
 function getArticles(callback) { 
 
@@ -97,8 +104,8 @@ app.get('/', function (req, res) {
             title: properties.get('main.app.title'), 
             articles: articleResult
         });
-     })
-})
+    });
+});
 
 // Route Files
 let articles_routes = require('./routes/articles_routes');
