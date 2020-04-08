@@ -107,6 +107,30 @@ app.get('/', function (req, res) {
     });
 });
 
+app.get('/test', function(req, res) {
+/*
+    console.log ('Step 1');
+
+    function double(num, callback) {
+        console.log('in double function before callback');
+        setTimeout( function(){
+            console.log('After timeout');
+          }, 500 );
+        callback(num*2);
+        console.log('in double function after callback');
+    }
+
+    console.log ('Step 2');
+    double(8, function(result){
+        setTimeout( function(){
+            console.log ('callback');
+          }, 500 );
+        
+    });
+    console.log ('Step 3');
+*/
+});
+
 // Route Files
 let articles_routes = require('./routes/articles_routes');
 let users_routes = require('./routes/users_routes');

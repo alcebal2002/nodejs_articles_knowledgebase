@@ -28,7 +28,9 @@ module.exports = function(passport) {
     
         db.query(properties.get('queries.users.matchUsername'), [username], function (err, result) {
                 if (err) throw err;
-                if (!result) {
+                console.log ('Result: ' + result);
+
+                if (result != 1) {
                     return done(null, false, {message: 'User not found'});
                 }
             }
@@ -42,16 +44,17 @@ module.exports = function(passport) {
             console.log ('The password is ' + userPassword);
             return userPassword;
         });
-*/
-        bcrypt.compare(password, 
-            function() {
+
+
+        function() {
                 console.log('Getting password for user ' + username);
                 db.query(properties.get('queries.users.getPassword'), [username], 
                 function (err, result) {
                     if (err) throw err;
                     return result[0].user_password;
                 })
-            },function(err, isMatch){
+*/
+        bcrypt.compare(password, password,function(err, isMatch){
                 if (err) throw err;
                 if (isMatch) {
                     return done(null, user);

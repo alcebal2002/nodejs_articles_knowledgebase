@@ -16,9 +16,10 @@ COMMIT;
 */
 
 CREATE TABLE users (
-    id INT, 
+    id INT,
+    name VARCHAR(100),
     email VARCHAR(100),
-    user_name VARCHAR(100), 
-    user_password VARCHAR(100)
+    username VARCHAR(100), 
+    password VARCHAR(100)
 );
 ALTER TABLE users CHANGE id id INT AUTO_INCREMENT PRIMARY KEY;

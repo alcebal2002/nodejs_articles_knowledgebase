@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
+const User = require ('../models/user');
+require('../passport_config/passport')(passport);
 
 // Load environment specific properties based on [env] startup parameter
 // eg. npm start env=development or nodemon app.js env=development
@@ -9,15 +11,25 @@ const PropertiesReader = require('properties-reader');
 const properties = PropertiesReader(environment);
 
 // Get a single User (by Id) from database
-function getSingleUSer(id, callback) {
-    
-    console.log('Showing details for User ' + id);
+function getSingleUser(id, callback) {    
+    console.log('Getting details for User ' + id + '...');
     
     db.query(properties.get('queries.users.selectSingle'), [id], 
         function (err, result) {
-            callback(err, JSON.parse(JSON.stringify(result)));
+            if (err) return console.error(err.message);
+            if (!result.length > 0) {
+                callback (err, null);
+            } else {
+                //console.log ('User [' + result[0].id + ',' + result[0].name + ',' + result[0].email + ',' + result[0].username + ',' + result[0].password + ']');
+                var user = new User(result[0].id,
+                                    result[0].name,
+                                    result[0].email, 
+                                    result[0].username,
+                                    result[0].password);
+                callback (err, user);
+            }
         }
-    );    
+    );
 }
 
 // Insert new User into database
@@ -25,10 +37,8 @@ function insertUser(user) {
 
     console.log('Inserting new User...');
     
-    db.query(properties.get('queries.users.insert'), [user.email, user.username, user.password], (err, results, fields) => {
-        if (err) {
-          return console.error(err.message);
-        }
+    db.query(properties.get('queries.users.insert'), [user.name, user.email, user.username, user.password], (err, results, fields) => {
+        if (err) return console.error(err.message);
         // log result
         //console.log('Rows inserted [' + results.affectedRows + ']');
         if (results.affectedRows==1) {
@@ -45,10 +55,8 @@ function updateUser(user) {
     
     console.log('Updating User ' + user.id + "...");
 
-    db.query(properties.get('queries.users.update'), [user.email, user.username, user.password, user.id], (err, results, fields) => {
-        if (err) {
-          return console.error(err.message);
-        }
+    db.query(properties.get('queries.users.update'), [user.name, user.email, user.username, user.password, user.id], (err, results, fields) => {
+        if (err) return console.error(err.message);
         // log result
         //console.log('Rows updated [' + results.affectedRows + ']');
         if (results.affectedRows==1) {
@@ -65,9 +73,7 @@ function deleteUser(id) {
     console.log('Deleting User ' + id + "...");
        
     db.query(properties.get('queries.users.delete'), [id], (err, results, fields) => {
-        if (err) {
-          return console.error(err.message);
-        }
+        if (err) return console.error(err.message);
         // log result
         console.log('Rows updated [' + results.affectedRows + ']');
         if (results.affectedRows==1) {
@@ -96,12 +102,13 @@ router.get('/edit/:id', function(req, res) {
             title: properties.get('titles.users.edit'), 
             user: userResult[0]
         });
-     })
+     });
 });
 
 // Add Submit POST Route
 router.post('/register', function(req,res) {
 
+    req.checkBody('name', 'Name is required').notEmpty();
     req.checkBody('username', 'Username is required').notEmpty();
     req.checkBody('email', 'Email is required').notEmpty();
     req.checkBody('password', 'Password is required').notEmpty();
@@ -115,8 +122,7 @@ router.post('/register', function(req,res) {
             errors: errors
         });
     } else {
-        let User = require ('../models/user');
-        var user = new User(null, req.body.email, req.body.username, req.body.password);
+        var user = new User(null, req.body.name, req.body.email, req.body.username, req.body.password);
      
         // Save the new user to database
         insertUser (user);
@@ -129,7 +135,7 @@ router.post('/register', function(req,res) {
 router.post('/edit/:id', function(req,res) {
   
     let User = require ('../models/user');
-    var user = new User(req.params.id, req.body.username, req.body.email, req.body.password);
+    var user = new User(req.params.id, req.body.name, req.body.email, req.body.username, req.body.password);
     //console.log (user);
  
     // Update the user in the database
@@ -164,14 +170,13 @@ router.post ('/login', function(req, res, next) {
 // Get Single User
 router.get('/:id', function(req, res) {
     
-    //console.log ('Get details for user ' + req.params.id);
     getSingleUser(req.params.id, function (err, userResult){
         if (err) throw err;
-        //console.log (userResult);
-        res.render('show_user', {
-            title: properties.get('main.app.title'), 
-            article: userResult[0]
-        });
+        if (userResult != null) {
+            console.log ('User found with id ' + userResult.id);
+        } else {
+            console.log ('No user found with id ' + req.params.id);
+        }
      })
 });
 
