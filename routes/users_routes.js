@@ -12,10 +12,10 @@ const PropertiesReader = require('properties-reader');
 const properties = PropertiesReader(environment);
 
 // Get a single User (by Id) from database
-function getSingleUser(id, callback) {    
+function getUserById(id, callback) {    
     console.log('Getting details for User ' + id + '...');
     
-    db.query(properties.get('queries.users.selectSingle'), [id], 
+    db.query(properties.get('queries.users.selectById'), [id], 
         function (err, result) {
             if (err) return console.error(err.message);
             if (!result.length > 0) {
@@ -96,7 +96,7 @@ router.get('/register', function (req, res) {
 router.get('/edit/:id', function(req, res) {
     
     //console.log ('Get details for user ' + req.params.id);
-    getSingleUser(req.params.id, function (err, userResult){
+    getUserById(req.params.id, function (err, userResult){
         if (err) throw err;
         //console.log (userResult);
         res.render('edit_user', {
@@ -180,7 +180,7 @@ router.post ('/login', function(req, res, next) {
 // Get Single User
 router.get('/:id', function(req, res) {
     
-    getSingleUser(req.params.id, function (err, userResult){
+    getUserById(req.params.id, function (err, userResult){
         if (err) throw err;
         if (userResult != null) {
             console.log ('User found with id ' + userResult.id);

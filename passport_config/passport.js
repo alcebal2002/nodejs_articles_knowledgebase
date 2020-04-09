@@ -8,58 +8,38 @@ const environment = require ('../config/environments');
 const PropertiesReader = require('properties-reader');
 const properties = PropertiesReader(environment);
 
-// Get the password for a Username from database
-function getUserPassword(username, callback) {
-
-    console.log('Getting password for user ' + username);
-    
-    db.query(properties.get('queries.users.getPassword'), [username], 
-        function (err, result) {
-            callback(err, result[0].user_password);
-        }
-    );
-}
-
 module.exports = function(passport) {
     // Local Strategy
     passport.use(new LocalStrategy(function(username, password, done) {
         // Match Username
-        console.log('Matching Username...');
+        console.log('Matching Username [' + username + ']...');
     
-        db.query(properties.get('queries.users.matchUsername'), [username], function (err, result) {
+        db.query(properties.get('queries.users.selectByUsername'), [username],  
+            function (err, result) {
                 if (err) throw err;
-                console.log ('Result: ' + result);
-
-                if (result != 1) {
+                if (!result.length > 0) {
+                    console.log('Username [' + username + '] not found');
                     return done(null, false, {message: 'User not found'});
-                }
-            }
-        );                
-
-        // Match Password
-        console.log('Matching Password...');
-/*
-        getUserPassword (username, function (err, userPassword) {
-            if (err) throw err;
-            console.log ('The password is ' + userPassword);
-            return userPassword;
-        });
-
-
-        function() {
-                console.log('Getting password for user ' + username);
-                db.query(properties.get('queries.users.getPassword'), [username], 
-                function (err, result) {
-                    if (err) throw err;
-                    return result[0].user_password;
-                })
-*/
-        bcrypt.compare(password, password,function(err, isMatch){
-                if (err) throw err;
-                if (isMatch) {
-                    return done(null, user);
                 } else {
-                    return done(null, false, {message: 'Wrong password'});
+                    console.log('Username [' + username + '] found');
+                    var user = new User(result[0].id,
+                        result[0].name,
+                        result[0].email, 
+                        result[0].username,
+                        result[0].password);
+
+                    // Match Password
+                    console.log('Matching Password for [' + username + ']...');
+                    bcrypt.compare(password, user.password,function(err, isMatch){
+                        if (err) throw err;
+                        if (isMatch) {
+                            console.log('Password matched for [' + username + ']');
+                            return done(null, user);
+                        } else {
+                            console.log('Password not matching for [' + username + ']');
+                            return done(null, false, {message: 'Wrong password'});
+                        }
+                    });
                 }
             }
         );
@@ -70,8 +50,20 @@ module.exports = function(passport) {
     });
 
     passport.deserializeUser (function (id, done) {
-        User.findById (id, function (err, user) {
-            done (err, user);
-        });
+        db.query(properties.get('queries.users.selectById'), [id], 
+            function (err, result) {
+                if (err) return console.error(err.message);
+                if (!result.length > 0) {
+                    done(null, false, {message: 'Unable to get User [' + id + ']'});
+                } else {
+                    var user = new User(result[0].id,
+                                        result[0].name,
+                                        result[0].email, 
+                                        result[0].username,
+                                        result[0].password);
+                    done (err, user);
+                }
+            }
+        );
     });
 }
