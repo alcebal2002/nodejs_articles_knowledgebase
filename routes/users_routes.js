@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const User = require ('../models/user');
 require('../passport_config/passport')(passport);
@@ -43,9 +44,9 @@ function insertUser(user) {
         //console.log('Rows inserted [' + results.affectedRows + ']');
         if (results.affectedRows==1) {
             user.id = results.insertId;
-            console.log('User inserted with id: ' + user.id);
+            console.log('User created with id: ' + user.id);
         } else {
-            console.log('Unable to insert User');
+            console.log('Unable to create User');
         }
     });
 }
@@ -111,7 +112,9 @@ router.post('/register', function(req,res) {
     req.checkBody('name', 'Name is required').notEmpty();
     req.checkBody('username', 'Username is required').notEmpty();
     req.checkBody('email', 'Email is required').notEmpty();
+    req.checkBody('email', 'Email is not valid').isEmail();
     req.checkBody('password', 'Password is required').notEmpty();
+    req.checkBody('password2', 'Passwords do not match').equals(req.body.password);
 
     // Get Errors
     let errors = req.validationErrors();
@@ -124,10 +127,17 @@ router.post('/register', function(req,res) {
     } else {
         var user = new User(null, req.body.name, req.body.email, req.body.username, req.body.password);
      
-        // Save the new user to database
-        insertUser (user);
-        req.flash('success', 'User added');
-        res.redirect('/');
+        bcrypt.genSalt(properties.get('bcrypt.saltSize'), function (err,salt) {
+            bcrypt.hash(user.password, salt, function(err, hash){
+                if (err) console.log(err);
+                user.password = hash;
+
+                // Save the new user to database
+                insertUser (user);
+                req.flash('success', 'User added');
+                res.redirect('/');
+            });
+        });
     }    
 })
 
